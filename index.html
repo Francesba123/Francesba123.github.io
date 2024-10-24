@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Aleatório</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: #121212;
+            color: #ffffff;
+        }
+        .container {
+            max-width: 400px;
+            width: 100%;
+            padding: 20px;
+            border-radius: 10px;
+            background-color: #1e1e1e;
+            box-shadow: 0 2px 15px rgba(0, 0, 0, 0.5);
+        }
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        input, button {
+            width: 100%;
+            padding: 12px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            background-color: #333333;
+            color: #ffffff;
+            font-size: 16px;
+        }
+        input:focus, button:focus {
+            outline: none;
+            border: 1px solid #007bff;
+        }
+        #chat-container {
+            display: none;
+            flex-direction: column;
+            height: 70vh;
+            overflow-y: auto;
+            margin-top: 20px;
+            border: 1px solid #444444;
+            border-radius: 5px;
+            padding: 10px;
+        }
+        #messages {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            padding: 10px;
+        }
+        .message {
+            margin: 5px 0;
+            padding: 10px;
+            border-radius: 5px;
+            max-width: 80%;
+        }
+        .user {
+            background-color: #007bff;
+            color: #ffffff;
+            align-self: flex-end;
+        }
+        .other {
+            background-color: #555555;
+            color: #ffffff;
+            align-self: flex-start;
+        }
+        #input-message {
+            flex-grow: 0;
+        }
+        button:hover {
+            background-color: #007bff;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <div class="container" id="username-container">
+        <h1>Bem-vindo ao Chat Aleatório</h1>
+        <input type="text" id="username" placeholder="Digite seu nome de usuário" required>
+        <input type="number" id="age" placeholder="Digite sua idade" min="18" required>
+        <p>Pessoas online: <span id="online-users">0</span></p>
+        <button onclick="startChat()">Entrar</button>
+    </div>
+
+    <div class="container" id="chat-container">
+        <h1>Chat</h1>
+        <div id="chat-window">
+            <div id="messages"></div>
+        </div>
+        <input type="text" id="input-message" placeholder="Digite uma mensagem" required>
+        <button onclick="sendMessage()">Enviar</button>
+        <button onclick="nextPerson()">Próxima Pessoa</button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.0.0/socket.io.min.js"></script>
+    <script>
+        const socket = io();
+        const usernameContainer = document.getElementById('username-container');
+        const chatContainer = document.getElementById('chat-container');
+        const messagesDiv = document.getElementById('messages');
+        let roomId = null;
+
+        function startChat() {
+            const username = document.getElementById('username').value;
+            const age = document.getElementById('age').value;
+
+            if (username && age >= 18) {
+                usernameContainer.style.display = 'none';
+                chatContainer.style.display = 'flex';
+                socket.emit('join', { username: username });
+            } else {
+                alert('Você precisa inserir um nome de usuário e ter mais de 18 anos para entrar.');
+            }
+        }
+
+        socket.on('chat_start', (room) => {
+            roomId = room;
+            displayMessage('Você está conectado a uma nova pessoa.', 'other');
+        });
+
+        function sendMessage() {
+            const inputMessage = document.getElementById('input-message');
+            const message = inputMessage.value;
+            if (message && roomId) {
+                displayMessage(message, 'user');
+                inputMessage.value = '';
+                socket.emit('message', { room: roomId, message: message });
+            }
+        }
+
+        socket.on('message', (message) => {
+            displayMessage(message, 'other');
+        });
+
+        function displayMessage(message, type) {
+            const messageDiv = document.createElement('div');
+            messageDiv.classList.add('message', type);
+            messageDiv.innerText = message;
+            messagesDiv.appendChild(messageDiv);
+            messagesDiv.scrollTop = messagesDiv.scrollHeight; // Rola para o fim da conversa
+        }
+
+        function nextPerson() {
+            messagesDiv.innerHTML = ''; // Limpa a conversa
+            socket.emit('join', { username: 'anonymous' }); // Recomeça com outro usuário
+        }
+    </script>
+</body>
+</html>
