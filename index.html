@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Chat Aleatório</title>
     <style>
+        /* Seu CSS */
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -90,15 +91,12 @@
         <h1>Bem-vindo ao Chat Aleatório</h1>
         <input type="text" id="username" placeholder="Digite seu nome de usuário" required>
         <input type="number" id="age" placeholder="Digite sua idade" min="18" required>
-        <p>Pessoas online: <span id="online-users">0</span></p>
         <button onclick="startChat()">Entrar</button>
     </div>
 
     <div class="container" id="chat-container">
         <h1>Chat</h1>
-        <div id="chat-window">
-            <div id="messages"></div>
-        </div>
+        <div id="messages"></div>
         <input type="text" id="input-message" placeholder="Digite uma mensagem" required>
         <button onclick="sendMessage()">Enviar</button>
         <button onclick="nextPerson()">Próxima Pessoa</button>
@@ -125,8 +123,8 @@
             }
         }
 
-        socket.on('chat_start', (room) => {
-            roomId = room;
+        socket.on('chat_start', (data) => {
+            roomId = data.room;
             displayMessage('Você está conectado a uma nova pessoa.', 'other');
         });
 
